@@ -362,7 +362,7 @@ struct s5p_panel_data aries_panel_data = {
 		.mult = {
 			2318372099U,
 			2117262806U,
-			1729744557U,
+			2082349739U,
 		},
 		.rshift = 31,
 	},
@@ -372,3 +372,7 @@ struct s5p_panel_data aries_panel_data = {
 	.gamma_table_size = ARRAY_SIZE(gamma_table),
 };
 
+static const u16 brightness_setting_table[] = {
+	0x051, 0x17f,
+	ENDDEF, 0x0000
+};
