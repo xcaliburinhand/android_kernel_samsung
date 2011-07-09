@@ -44,9 +44,35 @@
 #include <mach/regs-clock.h>
 #endif
 
-#if (CONFIG_FB_S3C_NUM_OVLY_WIN >= CONFIG_FB_S3C_DEFAULT_WINDOW)
-#error "FB_S3C_NUM_OVLY_WIN should be less than FB_S3C_DEFAULT_WINDOW"
-#endif
+#define DISPLAY_BOOT_PROGRESS
+
+/*
+ *  Mark for GetLog (tkhwang)
+ */
+
+struct struct_frame_buf_mark {
+	u32 special_mark_1;
+	u32 special_mark_2;
+	u32 special_mark_3;
+	u32 special_mark_4;
+	void *p_fb;
+	u32 resX;
+	u32 resY;
+	u32 bpp;    //color depth : 16 or 24
+	u32 frames; // frame buffer count : 2
+};
+
+static struct struct_frame_buf_mark  frame_buf_mark = {
+	.special_mark_1 = (('*' << 24) | ('^' << 16) | ('^' << 8) | ('*' << 0)),
+	.special_mark_2 = (('I' << 24) | ('n' << 16) | ('f' << 8) | ('o' << 0)),
+	.special_mark_3 = (('H' << 24) | ('e' << 16) | ('r' << 8) | ('e' << 0)),
+	.special_mark_4 = (('f' << 24) | ('b' << 16) | ('u' << 8) | ('f' << 0)),
+	.p_fb   = 0,
+	.resX   = 480,
+	.resY   = 800,
+	.bpp    = 32,
+	.frames = 2
+};
 
 struct s3c_platform_fb *to_fb_plat(struct device *dev)
 {
@@ -62,7 +88,7 @@ static struct timer_list progress_timer;
 
 #define PROGRESS_BAR_LEFT_POS	54
 #define PROGRESS_BAR_RIGHT_POS	425
-#define PROGRESS_BAR_START_Y	445
+#define PROGRESS_BAR_START_Y	576
 #define PROGRESS_BAR_WIDTH	4
 #define PROGRESS_BAR_HEIGHT	8
 
