@@ -735,8 +735,8 @@ static struct regulator_init_data aries_buck2_data = {
 static struct regulator_init_data aries_buck3_data = {
 	.constraints	= {
 		.name		= "VCC_1.8V",
-		.min_uV		= 1700000,
-		.max_uV		= 1700000,
+		.min_uV		= 1600000,
+		.max_uV		= 1600000,
 		.apply_uV	= 1,
 		.always_on	= 1,
 	},
