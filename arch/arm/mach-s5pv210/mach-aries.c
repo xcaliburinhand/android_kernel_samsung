@@ -5334,7 +5334,7 @@ void otg_phy_init(void)
 			S3C_USBOTG_PHYTUNE);
 
 	/* set DC level as 0xf (24%) */
-	writel(readl(S3C_USBOTG_PHYTUNE) | 0xf, S3C_USB_PHYTUNE);
+	writel(readl(S3C_USBOTG_PHYTUNE) | 0xf, S3C_USBOTG_PHYTUNE);
 }
 EXPORT_SYMBOL(otg_phy_init);
 
