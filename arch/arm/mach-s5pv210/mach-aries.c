@@ -1219,6 +1219,11 @@ static const int touch_keypad_code[] = {
 	KEY_BACK,
 	0,
 	0
+#elif defined (CONFIG_SAMSUNG_VIBRANT)
+	KEY_MENU,
+	KEY_BACK,
+	KEY_HOME,
+	KEY_SEARCH
 #else
 	KEY_MENU,
 	KEY_HOME,
