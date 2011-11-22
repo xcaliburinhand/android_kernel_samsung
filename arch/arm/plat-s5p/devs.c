@@ -184,10 +184,12 @@ void __init s3c_usb_set_serial(void)
 	 */
 	src = device_serial;
 	rndis_pdata.ethaddr[0] = 0x02;
+#if 0
 	for (i = 0; *src; i++) {
 		/* XOR the USB serial across the remaining bytes */
 		rndis_pdata.ethaddr[i % (ETH_ALEN - 1) + 1] ^= *src++;
 	}
+#endif
 }
 
 struct platform_device s3c_device_android_usb = {
