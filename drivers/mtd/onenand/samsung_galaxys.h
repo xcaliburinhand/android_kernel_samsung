@@ -1,4 +1,4 @@
-/* linux/drivers/mtd/onenand/samsung_galaxysb.h
+/* linux/drivers/mtd/onenand/samsung_galaxys.h
  *
  * Partition Layout for Samsung Galaxy S (GT-I9000B)
  *
