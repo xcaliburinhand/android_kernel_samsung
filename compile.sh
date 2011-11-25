@@ -27,9 +27,9 @@ fi
 
 . ./setenv.sh
 
-echo "building kernel with voodoo color"
-sed -i 's/^.*FB_VOODOO.*$//' .config
-echo 'CONFIG_FB_VOODOO=y
+# echo "building kernel with voodoo color"
+# sed -i 's/^.*FB_VOODOO.*$//' .config
+# echo 'CONFIG_FB_VOODOO=y
 # CONFIG_FB_VOODOO_DEBUG_LOG is not set' >> .config
 
 make -j8
