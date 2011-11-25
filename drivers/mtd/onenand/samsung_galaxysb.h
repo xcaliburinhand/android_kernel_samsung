@@ -1,4 +1,4 @@
-/* linux/drivers/mtd/onenand/samsung_galaxysb.h
+/* linux/drivers/mtd/onenand/samsung_galaxys.h
  *
  * Partition Layout for Samsung Galaxy S (GT-I9000B)
  *
@@ -42,12 +42,12 @@ struct mtd_partition s3c_partition_info[] = {
 	{	
 		.name		= "system",
 		.offset		=  (132*SZ_256K),
-		.size		=  (976*SZ_256K), //1107//912 //old 881  //old 750*256   old 781 = 200mb now 250mb
+		.size		=  (1437*SZ_256K), //1568
 	},
 	{
 		.name		= "cache",
-		.offset		= (1108*SZ_256K), //old 882 
-		.size		= (320*SZ_256K), //1232 //1201 //1428
+		.offset		= (1569*SZ_256K), 
+		.size		= (320*SZ_256K), //1888
 	},
 	{       /* we should consider moving this before the modem at the end
 	           that would allow us to change the partitions before without
@@ -62,11 +62,6 @@ struct mtd_partition s3c_partition_info[] = {
 		.name		= "radio",
 		.offset		= (1940*SZ_256K),
 		.size		= (64*SZ_256K), //2003
-	},
-	{
-		.name		= "datadata",
-		.offset		= (1428*SZ_256K), //1202
-		.size		= (461*SZ_256K), //1889 //old 656
 	},
 	{       /* The reservoir area is used by Samsung's Block Management Layer (BML)
 	           to map good blocks from this reservoir to bad blocks in user
