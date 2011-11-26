@@ -49,7 +49,7 @@ struct s5p_panel_data {
 
 	const struct tl2796_gamma_adj_points *gamma_adj_points;
 #ifdef CONFIG_FB_VOODOO
-	struct gamma_entry *gamma_table;
+  struct gamma_entry *gamma_table;
 #else
 	const struct gamma_entry *gamma_table;
 #endif
@@ -58,11 +58,12 @@ struct s5p_panel_data {
 
 enum {
 	BV_0   =          0,
-	BV_1   =   0xD8722A,
+	BV_1   =     0x552D,
 	BV_19  =   0xD8722A,
 	BV_43  =  0x51955E1,
 	BV_87  = 0x18083FB0,
 	BV_171 = 0x6A472534,
 	BV_255 = 0xFFFFFFFF,
 };
+
 
