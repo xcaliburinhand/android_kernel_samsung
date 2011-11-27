@@ -47,7 +47,7 @@ struct mtd_partition s3c_partition_info[] = {
 	{
 		.name		= "cache",
 		.offset		= (1132*SZ_256K),
-		.size		= (70*SZ_256K), //1201
+		.size		= (277*SZ_256K), //1201
 	},
 	{       /* we should consider moving this before the modem at the end
 	           that would allow us to change the partitions before without
@@ -65,8 +65,8 @@ struct mtd_partition s3c_partition_info[] = {
 	},
 	{
 		.name		= "datadata",
-		.offset		= (1202*SZ_256K),
-		.size		= (688*SZ_256K), //1889
+		.offset		= (1409*SZ_256K),
+		.size		= (461*SZ_256K), //1889
 	},
 	{       /* The reservoir area is used by Samsung's Block Management Layer (BML)
 	           to map good blocks from this reservoir to bad blocks in user
@@ -78,5 +78,6 @@ struct mtd_partition s3c_partition_info[] = {
 		.offset		= (2004*SZ_256K),
 		.size		= (44*SZ_256K), //2047
 	},
+
 };
 
