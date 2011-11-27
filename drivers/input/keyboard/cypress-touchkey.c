@@ -129,10 +129,6 @@ static void bl_off(struct work_struct *bl_off_work)
 	if (bl_devdata == NULL || unlikely(bl_devdata->is_dead) ||
 		bl_devdata->is_powering_on || bl_on || bl_devdata->is_sleeping)
 		return;
-#else
-	if (bl_devdata == NULL || unlikely(bl_devdata->is_dead) ||
-		bl_devdata->is_powering_on || bl_devdata->is_sleeping)
-		return;
 #endif
 
 	i2c_touchkey_write_byte(bl_devdata, bl_devdata->backlight_off);
@@ -226,7 +222,10 @@ static irqreturn_t touchkey_interrupt_thread(int irq, void *touchkey_devdata)
 	}
 
 	input_sync(devdata->input_dev);
+#ifdef CONFIG_SAMSUNG_CAPTIVATE
+#else
 	mod_timer(&bl_timer, jiffies + msecs_to_jiffies(BACKLIGHT_TIMEOUT));
+#endif
 err:
 	return IRQ_HANDLED;
 }
@@ -315,7 +314,10 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 	enable_irq(devdata->client->irq);
 	devdata->is_powering_on = false;
 	devdata->is_sleeping = false;
+#ifdef CONFIG_SAMSUNG_CAPTIVATE
+#else
 	mod_timer(&bl_timer, jiffies + msecs_to_jiffies(BACKLIGHT_TIMEOUT));
+#endif
 }
 #endif
 
@@ -514,7 +516,10 @@ static int __devexit i2c_touchkey_remove(struct i2c_client *client)
 	free_irq(client->irq, devdata);
 	all_keys_up(devdata);
 	input_unregister_device(devdata->input_dev);
+#ifdef CONFIG_SAMSUNG_CAPTIVATE
+#else
     del_timer(&bl_timer);
+#endif
 	kfree(devdata);
 	return 0;
 }
