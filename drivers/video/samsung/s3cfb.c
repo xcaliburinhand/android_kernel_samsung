@@ -88,7 +88,7 @@ static struct timer_list progress_timer;
 
 #define PROGRESS_BAR_LEFT_POS	54
 #define PROGRESS_BAR_RIGHT_POS	425
-#define PROGRESS_BAR_START_Y	576
+#define PROGRESS_BAR_START_Y	445
 #define PROGRESS_BAR_WIDTH	4
 #define PROGRESS_BAR_HEIGHT	8
 
