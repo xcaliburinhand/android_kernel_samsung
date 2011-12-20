@@ -44,35 +44,9 @@
 #include <mach/regs-clock.h>
 #endif
 
-#define DISPLAY_BOOT_PROGRESS
-
-/*
- *  Mark for GetLog (tkhwang)
- */
-
-struct struct_frame_buf_mark {
-	u32 special_mark_1;
-	u32 special_mark_2;
-	u32 special_mark_3;
-	u32 special_mark_4;
-	void *p_fb;
-	u32 resX;
-	u32 resY;
-	u32 bpp;    //color depth : 16 or 24
-	u32 frames; // frame buffer count : 2
-};
-
-static struct struct_frame_buf_mark  frame_buf_mark = {
-	.special_mark_1 = (('*' << 24) | ('^' << 16) | ('^' << 8) | ('*' << 0)),
-	.special_mark_2 = (('I' << 24) | ('n' << 16) | ('f' << 8) | ('o' << 0)),
-	.special_mark_3 = (('H' << 24) | ('e' << 16) | ('r' << 8) | ('e' << 0)),
-	.special_mark_4 = (('f' << 24) | ('b' << 16) | ('u' << 8) | ('f' << 0)),
-	.p_fb   = 0,
-	.resX   = 480,
-	.resY   = 800,
-	.bpp    = 32,
-	.frames = 2
-};
+#if (CONFIG_FB_S3C_NUM_OVLY_WIN >= CONFIG_FB_S3C_DEFAULT_WINDOW)
+#error "FB_S3C_NUM_OVLY_WIN should be less than FB_S3C_DEFAULT_WINDOW"
+#endif
 
 struct s3c_platform_fb *to_fb_plat(struct device *dev)
 {
@@ -198,6 +172,9 @@ static int s3cfb_draw_logo(struct fb_info *fb)
 		iounmap(logo_virt_buf);
 	}
 #else /*CONFIG_SAMSUNG_GALAXYS*/
+	if (readl(S5P_INFORM5)) //LPM_CHARGING mode
+		memcpy(fb->screen_base, charging, fb->var.yres * fb->fix.line_length);
+	else
 		memcpy(fb->screen_base, LOGO_RGB24, fb->var.yres * fb->fix.line_length);
 #endif
 	return 0;
@@ -258,9 +235,10 @@ static int s3cfb_map_video_memory(struct fb_info *fb)
 	if (fb->screen_base)
 		return 0;
 
-	if (pdata && pdata->pmem_start && (pdata->pmem_size >= fix->smem_len)) {
-		fix->smem_start = pdata->pmem_start;
-		fb->screen_base = ioremap_wc(fix->smem_start, pdata->pmem_size);
+	if (pdata && pdata->pmem_start[win->id] &&
+			(pdata->pmem_size[win->id] >= fix->smem_len)) {
+		fix->smem_start = pdata->pmem_start[win->id];
+		fb->screen_base = ioremap_wc(fix->smem_start, pdata->pmem_size[win->id]);
 	} else
 		fb->screen_base = dma_alloc_writecombine(fbdev->dev,
 						 PAGE_ALIGN(fix->smem_len),
@@ -291,8 +269,8 @@ static int s3cfb_map_default_video_memory(struct fb_info *fb)
 	if (win->owner == DMA_MEM_OTHER)
 		return 0;
 
-	fix->smem_start = pdata->pmem_start;
-	fb->screen_base = ioremap_wc(fix->smem_start, pdata->pmem_size);
+	fix->smem_start = pdata->pmem_start[win->id];
+	fb->screen_base = ioremap_wc(fix->smem_start, pdata->pmem_size[win->id]);
 
 	if (!fb->screen_base)
 		return -ENOMEM;
@@ -320,8 +298,8 @@ static int s3cfb_unmap_video_memory(struct fb_info *fb)
 
 	if (fix->smem_start) {
 		if (win->owner == DMA_MEM_FIMD) {
-			if (pdata && pdata->pmem_start &&
-					(pdata->pmem_size >= fix->smem_len))
+			if (pdata && pdata->pmem_start[win->id] &&
+					(pdata->pmem_size[win->id] >= fix->smem_len))
 				iounmap(fb->screen_base);
 			else
 				dma_free_writecombine(fbdev->dev, fix->smem_len,
@@ -329,6 +307,7 @@ static int s3cfb_unmap_video_memory(struct fb_info *fb)
 		}
 		fix->smem_start = 0;
 		fix->smem_len = 0;
+		fb->screen_base = 0;
 		dev_info(fbdev->dev,
 			"[fb%d] video memory released\n", win->id);
 	}
@@ -351,6 +330,7 @@ static int s3cfb_unmap_default_video_memory(struct fb_info *fb)
 #endif
 		fix->smem_start = 0;
 		fix->smem_len = 0;
+		fb->screen_base = 0;
 		dev_info(fbdev->dev,
 			"[fb%d] video memory released\n", win->id);
 	}
@@ -449,9 +429,6 @@ static int s3cfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fb)
 	if (var->xres_virtual < var->xres)
 		var->xres_virtual = var->xres;
 
-	if (var->yres_virtual > var->yres * CONFIG_FB_S3C_NR_BUFFERS)
-		var->yres_virtual = var->yres * CONFIG_FB_S3C_NR_BUFFERS;
-
 	var->xoffset = 0;
 
 	if (var->yoffset + var->yres > var->yres_virtual)
@@ -545,6 +522,7 @@ static int s3cfb_blank(int blank_mode, struct fb_info *fb)
 
 	return 0;
 }
+
 static int s3cfb_pan_display(struct fb_var_screeninfo *var, struct fb_info *fb)
 {
 	struct fb_fix_screeninfo *fix = &fb->fix;
@@ -860,10 +838,11 @@ static void s3cfb_init_fbinfo(struct s3cfb_global *ctrl, int id)
 	var->upper_margin = timing->v_fp;
 	var->lower_margin = timing->v_bp;
 
-	var->pixclock = lcd->freq * (var->left_margin + var->right_margin +
+	ctrl->pixclock_hz = lcd->freq * (var->left_margin + var->right_margin +
 				var->hsync_len + var->xres) *
 				(var->upper_margin + var->lower_margin +
 				var->vsync_len + var->yres);
+	var->pixclock = KHZ2PICOS(ctrl->pixclock_hz / 1000);
 
 	dev_dbg(ctrl->dev, "pixclock: %d\n", var->pixclock);
 
@@ -939,26 +918,11 @@ static int s3cfb_register_framebuffer(struct s3cfb_global *ctrl)
 				goto err_register_fb;
 			}
 #ifndef CONFIG_FRAMEBUFFER_CONSOLE
-#ifdef CONFIG_MACH_ARIES
-                        /*ugly workaround for bootpixels on SGS*/
-			if (j == 0) {
-				s3cfb_check_var(&ctrl->fb[j]->var, ctrl->fb[j]);
-				s3cfb_set_par(ctrl->fb[j]);
-				s3cfb_draw_logo(ctrl->fb[j]);
-				s3cfb_release_window(ctrl->fb[j]);
-			} else if (j == pdata->default_win) {
-				s3cfb_check_var(&ctrl->fb[j]->var, ctrl->fb[j]);
-				s3cfb_set_par(ctrl->fb[j]);
-			}
-
-#else
 			if (j == pdata->default_win) {
 				s3cfb_check_var(&ctrl->fb[j]->var, ctrl->fb[j]);
 				s3cfb_set_par(ctrl->fb[j]);
 				s3cfb_draw_logo(ctrl->fb[j]);
-
 			}
-#endif
 #endif
 	}
 
