@@ -256,8 +256,9 @@ static struct s3c_freq clk_info[] = {
 #ifdef CONFIG_LIVE_OC
 extern void cpufreq_stats_reset(void);
 
-static unsigned long sleep_freq, original_dmc0_reg;
-static unsigned long original_fclk[sizeof(clk_info) /  sizeof(struct s3c_freq)];
+static bool ocvalue_changed = false;
+
+static int oc_value = 100;
 
 static int dividers[sizeof(clk_info) /  sizeof(struct s3c_freq)];
 #endif
@@ -620,20 +621,26 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 	if (s3c_freqs.new.hclk_msys != s3c_freqs.old.hclk_msys || first_run)
 		bus_speed_changing = 1;
 
-	/*
-	 * If ONEDRAM(DMC0)'s clock is getting slower, DMC0's
-	 * refresh counter should decrease before slowing down
-	 * DMC0 clock. We assume that DMC0's source clock never
-	 * changes. This is a temporary setting for the transition.
-	 * Stable setting is done at the end of this function.
-	 */
-	reg = (__raw_readl(S5P_CLK_DIV6) & S5P_CLKDIV6_ONEDRAM_MASK)
-		>> S5P_CLKDIV6_ONEDRAM_SHIFT;
-	if (clkdiv_val[index][8] > reg) {
-		reg = backup_dmc0_reg * (reg + 1) / (clkdiv_val[index][8] + 1);
-		WARN_ON(reg > 0xFFFF);
-		reg &= 0xFFFF;
-		__raw_writel(reg, S5P_VA_DMC0 + 0x30);
+#ifdef CONFIG_LIVE_OC
+	if (ocvalue_changed) {
+		pll_changing = 1;
+		bus_speed_changing = 1;
+		ocvalue_changed = false;
+	}
+#endif
+
+	if (bus_speed_changing) {
+		/*
+		 * Reconfigure DRAM refresh counter value for minimum
+		 * temporary clock while changing divider.
+		 * expected clock is 83Mhz : 7.8usec/(1/83Mhz) = 0x287
+		 */
+		if (pll_changing)
+			s5pv210_set_refresh(DMC1, 83000);
+		else
+			s5pv210_set_refresh(DMC1, 100000);
+
+		s5pv210_set_refresh(DMC0, 83000);
 	}
 
 	/*
@@ -1012,6 +1019,8 @@ void liveoc_update(unsigned int oc_value)
     policy->user_policy.min = freq_table[index_min].frequency;
     policy->user_policy.max = freq_table[index_max].frequency;  
 
+    ocvalue_changed = true;
+
     mutex_unlock(&set_freq_lock);
 
     cpufreq_stats_reset();
@@ -1141,10 +1150,23 @@ static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
 	return NOTIFY_DONE;
 }
 
-static struct freq_attr *s5pv210_cpufreq_attr[] = {
-	&cpufreq_freq_attr_scaling_available_freqs,
-	NULL,
-};
+static int s5pv210_cpufreq_reboot_notifier_event(struct notifier_block *this,
+		unsigned long event, void *ptr)
+{
+	int ret = 0;
+
+#ifdef CONFIG_LIVE_OC
+	ret = cpufreq_driver_target(cpufreq_cpu_get(0), sleep_freq,
+			DISABLE_FURTHER_CPUFREQ);
+#else
+	ret = cpufreq_driver_target(cpufreq_cpu_get(0), SLEEP_FREQ,
+			DISABLE_FURTHER_CPUFREQ);
+#endif
+	if (ret < 0)
+		return NOTIFY_BAD;
+
+	return NOTIFY_DONE;
+}
 
 static struct cpufreq_driver s5pv210_cpufreq_driver = {
 	.flags		= CPUFREQ_STICKY,
