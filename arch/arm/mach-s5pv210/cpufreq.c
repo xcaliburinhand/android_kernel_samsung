@@ -356,80 +356,16 @@ static void s5pv210_cpufreq_clksrcs_MPLL2APLL(unsigned int index,
 {
 	unsigned int reg;
 
-#ifdef CONFIG_LIVE_OC
-	u32 apll_value;
-#endif
-
-	/*
-	 * 1. Set Lock time = 30us*24MHz = 02cf
-	 */
-	__raw_writel(0x2cf, S5P_APLL_LOCK);
-
-	/*
-	 * 2. Turn on APLL
-	 * 2-1. Set PMS values
-	 */
-
-
-#ifdef CONFIG_LIVE_OC
-	apll_value = ((1 << 31) | ((((clk_info[index].fclk / 1000) * dividers[index]) / 24) << 16) | (dividers[index] << 8) | (1));
-
-	__raw_writel(apll_value, S5P_APLL_CON);
-#else
-
-//Fixed up the 1200mhz overclock (Thanks netarchy!)
-	if (index == L0)
-		__raw_writel(PLL45XX_APLL_VAL_1400, S5P_APLL_CON);
-	else if (index == L1)
-		__raw_writel(PLL45XX_APLL_VAL_1304, S5P_APLL_CON);
-	else if (index == L2)
-		__raw_writel(PLL45XX_APLL_VAL_1200, S5P_APLL_CON);
-	else
-		/* APLL FOUT becomes 800 Mhz */
-		__raw_writel(PLL45XX_APLL_VAL_800, S5P_APLL_CON);
-#endif
-	/* 2-2. Wait until the PLL is locked */
-	do {
-		reg = __raw_readl(S5P_APLL_CON);
-	} while (!(reg & (0x1 << 29)));
-
-	/*
-	 * 3. Change source clock from SCLKMPLL(667MHz)
-	 * to SCLKA2M(200MHz) in MFC_MUX and G3D_MUX
-	 * (667/4=166)->(200/4=50)MHz
-	 */
-	reg = __raw_readl(S5P_CLK_SRC2);
-	reg &= ~(S5P_CLKSRC2_G3D_MASK | S5P_CLKSRC2_MFC_MASK);
-	reg |= (0 << S5P_CLKSRC2_G3D_SHIFT) | (0 << S5P_CLKSRC2_MFC_SHIFT);
-	reg &= ~S5P_CLKSRC2_G2D_MASK;
-	reg |= 0x1 << S5P_CLKSRC2_G2D_SHIFT;
-	__raw_writel(reg, S5P_CLK_SRC2);
+	do_div(tmp, freq);
 
 	wait4src_gxd();
 
-	/*
-	 * 4. Change divider for MFC and G3D
-	 * (200/4=50)->(200/1=200)MHz
-	 */
-	reg = __raw_readl(S5P_CLK_DIV2);
-	reg &= ~(S5P_CLKDIV2_G3D_MASK | S5P_CLKDIV2_MFC_MASK);
-	reg |= (clkdiv_val[index][10] << S5P_CLKDIV2_G3D_SHIFT) |
-		(clkdiv_val[index][9] << S5P_CLKDIV2_MFC_SHIFT);
-	reg &= ~S5P_CLKDIV2_G2D_MASK;
-	reg |= 0x2 << S5P_CLKDIV2_G2D_SHIFT;
-	__raw_writel(reg, S5P_CLK_DIV2);
-
-	wait4div_gxd();
-
-	/* 5. Change MPLL to APLL in MSYS_MUX */
-	reg = __raw_readl(S5P_CLK_SRC0);
-	reg &= ~(S5P_CLKSRC0_MUX200_MASK);
-	reg |= (0x0 << S5P_CLKSRC0_MUX200_SHIFT); /* SCLKMPLL -> SCLKAPLL   */
-	__raw_writel(reg, S5P_CLK_SRC0);
-
-	do {
-		reg = __raw_readl(S5P_CLK_MUX_STAT0);
-	} while (reg & S5P_CLKMUX_STAT0_MUX200);
+	do_div(tmp1, tmp);
+#ifdef CONFIG_LIVE_OC
+	__raw_writel((tmp1 * oc_value) / 100, reg);
+#else
+	__raw_writel(tmp1, reg);
+#endif
 }
 
 #ifdef CONFIG_DVFS_LIMIT
