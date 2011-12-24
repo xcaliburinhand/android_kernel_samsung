@@ -29,7 +29,7 @@ fi
 
  echo "building kernel with voodoo color"
  sed -i 's/^.*FB_VOODOO.*$//' .config
- echo 'CONFIG_FB_VOODOO=y
+ echo 'CONFIG_FB_VOODOO=n
  CONFIG_FB_VOODOO_DEBUG_LOG is not set' >> .config
 #echo "CONFIG_CPU_FREQ_DEBUG=n
 #CONFIG_BT_BNEP_MC_FILTER=n
