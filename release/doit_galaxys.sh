@@ -11,7 +11,7 @@ RELVER=$1
 
 REL=ICS_I9000_$(date +%Y%m%d_r)${RELVER}_update.zip
 
-rm -r release/system 2> /dev/null
+rm -r release/system/lib 2> /dev/null
 mkdir -p release/system/lib/modules || exit 1
 #cp stable/* release/system/lib/modules/
 find . -name "*.ko" -exec cp {} release/system/lib/modules/ \; 2>/dev/null || exit 1
