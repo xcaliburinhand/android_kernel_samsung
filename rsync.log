@@ -33,3 +33,16 @@ ICS_Captivate_20111227_r3087v_update.zip
 sent 6554321 bytes  received 34 bytes  1456523.33 bytes/sec
 total size is 26209390  speedup is 4.00
 “Completed at: Tue Dec 27 16:24:25 CST 2011”
+
+
+
+sending incremental file list
+./
+ICS_Captivate_20111228_r3109v_update.zip
+ICS_I9000B_20111228_r3112v_update.zip
+ICS_I9000_20111228_r3111v_update.zip
+ICS_Vibrant_20111228_r3110v_update.zip
+
+sent 26214116 bytes  received 91 bytes  1497954.69 bytes/sec
+total size is 26210533  speedup is 1.00
+“Completed at: Wed Dec 28 00:34:27 CST 2011”
