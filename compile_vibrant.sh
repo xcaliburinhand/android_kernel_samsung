@@ -35,7 +35,7 @@ fi
 #CONFIG_BT_BNEP_MC_FILTER=n
 #CONFIG_BT_BNEP_PROTO_FILTER=n" >> .config
 cp arch/arm/configs/aries_vibrantmtd_defconfig .config
-make -j3
+make -j4
 
 echo "creating boot.img with voodoo color"
 ~/android/system/device/samsung/aries-common/mkshbootimg.py release/boot.img arch/arm/boot/zImage ~/android/system/device/samsung/Fugumod-ramdisk-new/ramdisk.img ~//android/system/device/samsung/Fugumod-ramdisk-new/ramdisk-recovery.img

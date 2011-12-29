@@ -3,46 +3,18 @@
 
 sending incremental file list
 ./
-ICS_Captivate_20111226_r3080v_update.zip
-ICS_I9000B_20111226_r3083v_update.zip
-ICS_I9000_20111226_r3082v_update.zip
-ICS_Vibrant_20111226_r3081v_update.zip
+ICS_Vibrant_20111229_r3164v_update.zip
 
-sent 26134622 bytes  received 91 bytes  1935904.67 bytes/sec
-total size is 26131043  speedup is 1.00
-“Completed at: Mon Dec 26 01:52:38 CST 2011”
+sent 6554406 bytes  received 34 bytes  1456542.22 bytes/sec
+total size is 32771229  speedup is 5.00
+“Completed at: Thu Dec 29 13:50:49 CST 2011”
 
 
 
 sending incremental file list
 ./
-ICS_I9000B_20111227_r3087v_update.zip
-ICS_I9000_20111227_r3086v_update.zip
-ICS_Vibrant_20111227_r3085v_update.zip
+ICS_I9000B_20111229_r3165v_update.zip
 
-sent 19658825 bytes  received 72 bytes  1872275.90 bytes/sec
-total size is 19656131  speedup is 1.00
-“Completed at: Tue Dec 27 15:58:28 CST 2011”
-
-
-
-sending incremental file list
-./
-ICS_Captivate_20111227_r3087v_update.zip
-
-sent 6554321 bytes  received 34 bytes  1456523.33 bytes/sec
-total size is 26209390  speedup is 4.00
-“Completed at: Tue Dec 27 16:24:25 CST 2011”
-
-
-
-sending incremental file list
-./
-ICS_Captivate_20111228_r3109v_update.zip
-ICS_I9000B_20111228_r3112v_update.zip
-ICS_I9000_20111228_r3111v_update.zip
-ICS_Vibrant_20111228_r3110v_update.zip
-
-sent 26214116 bytes  received 91 bytes  1497954.69 bytes/sec
-total size is 26210533  speedup is 1.00
-“Completed at: Wed Dec 28 00:34:27 CST 2011”
+sent 6549813 bytes  received 34 bytes  1455521.56 bytes/sec
+total size is 39319893  speedup is 6.00
+“Completed at: Thu Dec 29 13:57:16 CST 2011”

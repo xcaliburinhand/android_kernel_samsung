@@ -1,3 +1,10 @@
 #!/bin/bash
-./compile_captivate.sh; ./compile_vibrant.sh; ./compile_galaxys.sh; ./compile_galaxysb.sh;
+make clean;
+./compile_captivate.sh; 
+make clean;
+./compile_vibrant.sh; 
+make clean;
+./compile_galaxys.sh; 
+make clean;
+./compile_galaxysb.sh;
 ~/sync.sh;
