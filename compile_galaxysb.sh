@@ -36,7 +36,7 @@ CONFIG_FB_VOODOO_DEBUG_LOG is not set' >> .config
 #CONFIG_BT_BNEP_PROTO_FILTER=n" >> .config
 
 cp arch/arm/configs/aries_galaxysbmtd_defconfig .config
-make -j4
+make -j5
 
 echo "creating boot.img with voodoo color"
 ~/android/system/device/samsung/aries-common/mkshbootimg.py release/boot.img arch/arm/boot/zImage ~/android/system/device/samsung/Fugumod-ramdisk-new/ramdisk.img ~//android/system/device/samsung/Fugumod-ramdisk-new/ramdisk-recovery.img
