@@ -1,33 +1,27 @@
-#!/bin/sh
+#!/bin/bash
 
-#PARAM=$1
+PARAM=$1
+PARAMTWO=$2
 
-if [ "${PARAM}" == "DEBUG" ]; then
-	echo '##################### DEBUG VERSION #################'
-	sed -i 's/# CONFIG_FRAMEBUFFER_CONSOLE is not set/CONFIG_FRAMEBUFFER_CONSOLE=y/' .config
-	sed -i 's/# CONFIG_CMDLINE_FORCE is not set/CONFIG_CMDLINE_FORCE=y/' .config
-	DEBUG=1
-else
-	sed -i 's/CONFIG_FRAMEBUFFER_CONSOLE=y/# CONFIG_FRAMEBUFFER_CONSOLE is not set/' .config
-	sed -i 's/CONFIG_CMDLINE_FORCE=y/# CONFIG_CMDLINE_FORCE is not set/' .config
-	DEBUG=0
+if [ "$PARAM" == "new" ]; then
+	let RELVER=$RELVER+1
+fi
+
+if [ "$PARAM2" == "new" ]; then
+        let RELVER=$RELVER+1
 fi
 
 RELVER=`cat .version`
-##let RELVER=$RELVER+1
 
-#ensure there is no more old bcm4329 module
-rm drivers/net/wireless/bcm4329/bcm4329.ko drivers/net/wireless/bcmdhd/bcm4329.ko
-
-if [ "${PARAM}" == "DAILY" ]; then
-	FOLDER=daily
-else
-	FOLDER=experimental
+if [ "${PARAM}" == "BIGMEM" ]; then
+        SUFFIX="_BIGMEM" 
+else 
+	SUFFIX=""
 fi
 
 . ./setenv.sh
 cp arch/arm/configs/aries_captivatemtd_defconfig .config
- echo "building kernel with voodoo color"
+ echo "building kernel"
  sed -i 's/^.*FB_VOODOO.*$//' .config
  echo 'CONFIG_FB_VOODOO=n
  CONFIG_FB_VOODOO_DEBUG_LOG is not set' >> .config
@@ -35,13 +29,19 @@ cp arch/arm/configs/aries_captivatemtd_defconfig .config
 #CONFIG_BT_BNEP_MC_FILTER=n
 #CONFIG_BT_BNEP_PROTO_FILTER=n" >> .config
 
-make -j4
+if [ "${PARAM}" == "BIGMEM" ]; then
+        echo "CONFIG_S5PV210_BIGMEM=y" >>.config
+else
+        echo "# CONFIG_S5PV210_BIGMEM is not set" >>.config
+fi
 
-echo "creating boot.img with voodoo color"
-~/android/system/device/samsung/aries-common/mkshbootimg.py release/boot.img arch/arm/boot/zImage ~/android/system/device/samsung/Fugumod-ramdisk-new/ramdisk.img ~//android/system/device/samsung/Fugumod-ramdisk-new/ramdisk-recovery.img
+make -j5
 
-echo "launching packaging script with voodoo color"
-./release/doit_captivate.sh ${RELVER}v
+echo "creating boot.img"
+./scripts/mkshbootimg.py release/boot.img arch/arm/boot/zImage ./ramdisks//ramdisk.img ./ramdisks/ramdisk-recovery.img
+
+echo "launching packaging script"
+./release/doit_captivate.sh ${RELVER}v${SUFFIX}
 
 mv release/ICS_Captivate*.zip ~/Dropbox/Public/phonestuff/kernel/
 

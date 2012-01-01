@@ -239,7 +239,7 @@ KBUILD_MODULES :=
 KBUILD_BUILTIN := 1
 
 #	If we have only "make modules", don't compile built-in objects.
-#	When we're building modules with modversions, we need to consider
+#	When we're building modules with mosssssssns, we need to consider
 #	the built-in objects during the descend as well, in order to
 #	make sure the checksums are up to date before we record them.
 
@@ -732,11 +732,13 @@ quiet_cmd_vmlinux_version = GEN     .version
 	if [ ! -r .version ]; then			\
 	  rm -f .version;				\
 	  echo 1 >.version;				\
-	else						\
-	  mv .version .old_version;			\
-	  expr 0$$(cat .old_version) + 1 >.version;	\
-	fi;						\
+	fi;
 	$(MAKE) $(build)=init
+#	else						\
+#	  mv .version .old_version;			\
+#	  expr 0$$(cat .old_version) + 1 >.version;	\
+#	fi;						\
+#	$(MAKE) $(build)=init
 
 # Generate System.map
 quiet_cmd_sysmap = SYSMAP
