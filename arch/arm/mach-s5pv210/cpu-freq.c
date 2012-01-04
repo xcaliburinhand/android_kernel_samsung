@@ -878,7 +878,7 @@ static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 
 	cpufreq_frequency_table_cpuinfo(policy, freq_table);
 //Set initial max speed to 1ghz for people who don't want to overclock
-	policy->max = 1200000;
+	policy->max = 1000000;
 	policy->min = 100000;
 	return 0;
 }
