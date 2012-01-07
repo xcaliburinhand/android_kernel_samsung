@@ -406,33 +406,18 @@ static int fimc_add_outqueue(struct fimc_control *ctrl, int i)
 	struct fimc_capinfo *cap = ctrl->cap;
 	struct fimc_buf_set *buf;
 
-	unsigned int mask = 0x2;
+	if (cap->nr_bufs > FIMC_PHYBUFS) {
+		if (list_empty(&cap->inq))
+			return -ENOENT;
 
-	/* PINGPONG_2ADDR_MODE Only */
-	/* pair_buf_index stands for pair index of i. (0<->2) (1<->3) */
-
-	int pair_buf_index = (i^mask);
-
-	/* FIMC have 4 h/w registers */
-	if (i < 0 || i >= FIMC_PHYBUFS) {
-		fimc_err("%s: invalid queue index : %d\n", __func__, i);
-		return -ENOENT;
+		buf = list_first_entry(&cap->inq, struct fimc_buf_set, list);
+		list_del(&buf->list);
+	} else {
+		buf = &cap->bufs[i];
 	}
-
-	if (list_empty(&cap->inq))
-		return -ENOENT;
-
-	buf = list_first_entry(&cap->inq, struct fimc_buf_set, list);
-
-	/* pair index buffer should be allocated first */
-	cap->outq[pair_buf_index] = buf->id;
-	fimc_hwset_output_address(ctrl, buf, pair_buf_index);
 
 	cap->outq[i] = buf->id;
 	fimc_hwset_output_address(ctrl, buf, i);
-
-	if (cap->nr_bufs != 1)
-		list_del(&buf->list);
 
 	return 0;
 }
@@ -441,7 +426,7 @@ static int fimc_update_hwaddr(struct fimc_control *ctrl)
 {
 	int i;
 
-	for (i = 0; i < FIMC_PINGPONG; i++)
+	for (i = 0; i < FIMC_PHYBUFS; i++)
 		fimc_add_outqueue(ctrl, i);
 
 	return 0;
@@ -722,6 +707,7 @@ int fimc_enum_fmt_vid_capture(struct file *file, void *fh,
 		return ret;
 	}
 
+	memset(f, 0, sizeof(*f));
 	memcpy(f, &capture_fmts[i], sizeof(*f));
 
 	return 0;
@@ -740,6 +726,7 @@ int fimc_g_fmt_vid_capture(struct file *file, void *fh, struct v4l2_format *f)
 
 	mutex_lock(&ctrl->v4l2_lock);
 
+	memset(&f->fmt.pix, 0, sizeof(f->fmt.pix));
 	memcpy(&f->fmt.pix, &ctrl->cap->fmt, sizeof(f->fmt.pix));
 
 	mutex_unlock(&ctrl->v4l2_lock);
@@ -839,20 +826,23 @@ int fimc_s_fmt_vid_capture(struct file *file, void *fh, struct v4l2_format *f)
 	 * released at the file close.
 	 * Anyone has better idea to do this?
 	*/
-	mutex_lock(&ctrl->v4l2_lock);
-
-	if (!ctrl->cap) {
-		ctrl->cap = kmalloc(sizeof(*cap), GFP_KERNEL);
-		if (!ctrl->cap) {
-			mutex_unlock(&ctrl->v4l2_lock);
+	if (!cap) {
+		cap = kzalloc(sizeof(*cap), GFP_KERNEL);
+		if (!cap) {
 			fimc_err("%s: no memory for "
 				"capture device info\n", __func__);
 			return -ENOMEM;
 		}
 
+		/* assign to ctrl */
+		ctrl->cap = cap;
+	} else {
+		memset(cap, 0, sizeof(*cap));
 	}
-	cap = ctrl->cap;
-	memset(cap, 0, sizeof(*cap));
+
+	mutex_lock(&ctrl->v4l2_lock);
+
+	memset(&cap->fmt, 0, sizeof(cap->fmt));
 	memcpy(&cap->fmt, &f->fmt.pix, sizeof(cap->fmt));
 
 	/*
@@ -949,7 +939,7 @@ static void fimc_free_buffers(struct fimc_control *ctrl)
 		return;
 
 
-	for (i = 0; i < cap->nr_bufs; i++) {
+	for (i = 0; i < FIMC_PHYBUFS; i++) {
 		memset(&cap->bufs[i], 0, sizeof(cap->bufs[i]));
 		cap->bufs[i].state = VIDEOBUF_NEEDS_INIT;
 	}
@@ -1527,7 +1517,7 @@ static void fimc_reset_capture(struct fimc_control *ctrl)
 
 	fimc_stop_capture(ctrl);
 
-	for (i = 0; i < FIMC_PINGPONG; i++)
+	for (i = 0; i < FIMC_PHYBUFS; i++)
 		fimc_add_inqueue(ctrl, ctrl->cap->outq[i]);
 
 	fimc_hwset_reset(ctrl);
@@ -1711,19 +1701,16 @@ int fimc_qbuf_capture(void *fh, struct v4l2_buffer *b)
 {
 	struct fimc_control *ctrl = ((struct fimc_prv_data *)fh)->ctrl;
 
-	if (!ctrl->cap || !ctrl->cap->nr_bufs) {
-		fimc_err("%s: Invalid capture setting.\n", __func__);
-		return -EINVAL;
-	}
-
 	if (b->memory != V4L2_MEMORY_MMAP) {
 		fimc_err("%s: invalid memory type\n", __func__);
 		return -EINVAL;
 	}
 
-	mutex_lock(&ctrl->v4l2_lock);
-	fimc_add_inqueue(ctrl, b->index);
-	mutex_unlock(&ctrl->v4l2_lock);
+	if (ctrl->cap->nr_bufs > FIMC_PHYBUFS) {
+		mutex_lock(&ctrl->v4l2_lock);
+		fimc_add_inqueue(ctrl, b->index);
+		mutex_unlock(&ctrl->v4l2_lock);
+	}
 
 	return 0;
 }
@@ -1755,7 +1742,7 @@ int fimc_dqbuf_capture(void *fh, struct v4l2_buffer *b)
 	}
 
 	/* find out the real index */
-	pp = ((fimc_hwget_frame_count(ctrl) + 2) % 4);
+	pp = ((fimc_hwget_frame_count(ctrl) + 2) % 4) % cap->nr_bufs;
 
 	/* We have read the latest frame, hence should reset availability
 	 * flag
@@ -1766,14 +1753,16 @@ int fimc_dqbuf_capture(void *fh, struct v4l2_buffer *b)
 	if (cap->fmt.field == V4L2_FIELD_INTERLACED_TB)
 		pp &= ~0x1;
 
+	if (cap->nr_bufs > FIMC_PHYBUFS) {
 		b->index = cap->outq[pp];
-		fimc_dbg("%s: buffer(%d) outq[%d]\n", __func__, b->index, pp);
-
 		ret = fimc_add_outqueue(ctrl, pp);
 		if (ret) {
 			b->index = -1;
 			fimc_err("%s: no inqueue buffer\n", __func__);
 		}
+	} else {
+		b->index = pp;
+	}
 
 	mutex_unlock(&ctrl->v4l2_lock);
 
