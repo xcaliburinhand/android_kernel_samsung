@@ -146,4 +146,16 @@ extern struct platform_device s3c_device_ac97;
 
 #endif
 
-void __init s3c_usb_set_serial(void);
+/**
+ * s3c_set_platdata() - helper for setting platform data
+ * @pd: The default platform data for this device.
+ * @pdsize: The size of the platform data.
+ * @pdev: Pointer to the device to fill in.
+ *
+ * This helper replaces a number of calls that copy and then set the
+ * platform data of the device.
+ */
+extern void *s3c_set_platdata(void *pd, size_t pdsize,
+			      struct platform_device *pdev);
+
+#endif /* __PLAT_DEVS_H */
