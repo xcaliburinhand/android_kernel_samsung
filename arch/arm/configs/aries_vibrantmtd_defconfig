@@ -1604,7 +1604,6 @@ CONFIG_FB_CFB_IMAGEBLIT=y
 # CONFIG_FB_BACKLIGHT is not set
 # CONFIG_FB_MODE_HELPERS is not set
 # CONFIG_FB_TILEBLITTING is not set
-
 #
 # Frame buffer hardware drivers
 #
@@ -1624,6 +1623,7 @@ CONFIG_FB_S3C_MDNIE=y
 # CONFIG_FB_S3C_AMS701KA is not set
 # CONFIG_FB_S3C_MDNIE is not set
 # CONFIG_FB_S3C_CMC623 is not set
+# CONFIG_FB_S3C_NT35580 is not set
 # CONFIG_FB_ARMCLCD is not set
 # CONFIG_FB_S1D13XXX is not set
 # CONFIG_FB_TMIO is not set
