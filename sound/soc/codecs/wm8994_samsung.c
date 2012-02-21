@@ -133,7 +133,7 @@ select_route universal_wm8994_voicecall_paths[] = {
 	wm8994_set_voicecall_speaker, wm8994_set_voicecall_headset,
 	wm8994_set_voicecall_headphone, wm8994_set_voicecall_bluetooth,
 	wm8994_set_voicecall_tty_vco, wm8994_set_voicecall_tty_hco,
-	wm8994_set_voicecall_tty_full,
+	wm8994_set_voicecall_tty_full, wm8994_set_voicecall_dock_speaker,
 };
 
 select_mic_route universal_wm8994_mic_paths[] = {
@@ -300,7 +300,7 @@ static const char *playback_path[] = {
 };
 static const char *voicecall_path[] = { "OFF", "RCV", "SPK", "HP",
 					"HP_NO_MIC", "BT", "TTY_VCO",
-					"TTY_HCO", "TTY_FULL"};
+					"TTY_HCO", "TTY_FULL", "DOCK_SPEAKER"};
 static const char *fmradio_path[] = {
 	"FMR_OFF", "FMR_SPK", "FMR_HP", "FMR_DUAL_MIX"
 };
@@ -659,6 +659,9 @@ static int wm8994_set_voice_path(struct snd_kcontrol *kcontrol,
 		return -ENODEV;
 	}
 
+	if(_dockredir && path_num == CALL_HP_NO_MIC)
+		path_num = CALL_DOCK_SPEAKER;
+
 	switch (path_num) {
 	case CALL_OFF:
 		DEBUG_LOG("Switching off output path\n");
@@ -671,6 +674,7 @@ static int wm8994_set_voice_path(struct snd_kcontrol *kcontrol,
 	case CALL_TTY_VCO:
 	case CALL_TTY_HCO:
 	case CALL_TTY_FULL:
+        case CALL_DOCK_SPEAKER:
 		DEBUG_LOG("routing  voice path to %s\n", mc->texts[path_num]);
 		break;
 	default:
